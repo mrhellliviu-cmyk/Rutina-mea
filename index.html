@@ -2148,3 +2148,39 @@ END:VCALENDAR`;
   </script>
 </body>
 </html>
+<h1>📅 Rutina Mea</h1><h1>📅 Rutina Mea</h1>
+
+<div class="card warnBox">
+  <h2>🧾 Plan financiar lunar</h2>
+  <p class="muted" style="margin-top:0;">
+    Structură fixă. Nu te mai gândești zilnic.
+  </p>
+
+  <ul class="list">
+    <li class="item"><div class="grow">💼 Venit lunar</div><b id="incomeLbl"></b></li>
+    <li class="item"><div class="grow">🏠 Cheltuieli fixe</div><b id="fixedLbl"></b></li>
+    <li class="item"><div class="grow">🍽 Mâncare</div><b id="foodLbl"></b></li>
+    <li class="item"><div class="grow">💣 Datorii (țintă)</div><b id="debtTargetLbl"></b></li>
+    <li class="item ok"><div class="grow">🟢 Rămas pentru tine</div><b id="freeLbl"></b></li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>💣 Datorii</h2>
+  <p class="muted" style="margin-top:0;">
+    Nu contează cui. Contează să respecți suma.
+  </p>
+
+  <div class="row" style="margin-bottom:10px;">
+    <div class="card ok" style="margin:0; box-shadow:none;">
+      <div class="muted">Țintă lunară</div>
+      <div style="font-size:22px;"><b id="debtTargetBig"></b></div>
+    </div>
+    <div class="card ok" style="margin:0; box-shadow:none;">
+      <div class="muted">Status luna curentă</div>
+      <div style="font-size:16px;"><b id="debtStatus"></b></div>
+    </div>
+  </div>
+
+  <button id="payDebtBtn">Am pus banii la datorii</button>
+</div>
