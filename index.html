@@ -29,6 +29,767 @@
     .amount{font-weight:bold;}
     .hr{height:1px; background:#eee; margin:10px 0;}
     .kbd{font-family: ui-monospace, Menlo, Consolas, monospace; background:#f2f2f2; padding:2px 6px; border-radius:6px;}
+    .check { width:auto; transform: scale(1.1); margin-right:10px;}
+  </style>
+</head>
+
+<body>
+  <h1>📅 Rutina Mea</h1>
+  <p id="date" class="muted"></p>
+
+  <div class="card">
+    <h2>⏰ Program</h2>
+    <p>Trezire: <b>05:50</b></p>
+    <p>Lucru: <b>07:00</b></p>
+    <p class="muted">Start: 1 ianuarie 2026</p>
+  </div>
+
+  <!-- BUDGET -->
+  <div class="card">
+    <h2>💰 Buget (7 zile)</h2>
+    <div class="row" style="margin-bottom:8px;">
+      <span class="pill">Buget săptămânal: <b id="weeklyBudgetLbl"></b></span>
+      <span class="pill">Zi: <b id="dowLbl"></b></span>
+      <span class="pill">Ținta AZI: <b id="todayAllowanceLbl"></b></span>
+    </div>
+
+    <div class="row" style="margin-bottom:10px;">
+      <div class="card ok" style="margin:0; box-shadow:none;">
+        <div class="muted">Cheltuit săptămâna asta</div>
+        <div style="font-size:20px;"><b id="spentWeekLbl"></b></div>
+      </div>
+      <div class="card ok" style="margin:0; box-shadow:none;">
+        <div class="muted">Rămas săptămâna asta</div>
+        <div style="font-size:20px;"><b id="remainWeekLbl"></b></div>
+      </div>
+      <div class="card ok" style="margin:0; box-shadow:none;">
+        <div class="muted">Cheltuit AZI</div>
+        <div style="font-size:20px;"><b id="todaySpentLbl"></b></div>
+      </div>
+    </div>
+
+    <p id="budgetNote" class="muted" style="margin:0;"></p>
+  </div>
+
+  <!-- EXPENSES MULTI -->
+  <div class="card">
+    <h2>🧾 Cheltuieli azi (bonuri)</h2>
+    <p class="muted" style="margin-top:0;">
+      Adaugă fiecare bon separat. Totalul zilei se calculează singur.
+    </p>
+
+    <div class="row">
+      <div>
+        <label>Suma (€)</label>
+        <input type="number" id="expAmount" placeholder="ex: 8.50" inputmode="decimal">
+      </div>
+      <div>
+        <label>Categorie</label>
+        <select id="expCat">
+          <option value="Mâncare">Mâncare</option>
+          <option value="Băuturi">Băuturi</option>
+          <option value="Snack">Snack</option>
+          <option value="Altele">Altele</option>
+        </select>
+      </div>
+    </div>
+    <label>Notă (opțional)</label>
+    <input id="expNote" placeholder="ex: Lidl - pui + orez">
+
+    <div style="height:10px"></div>
+    <div class="row">
+      <button id="addExpenseBtn">Adaugă bon</button>
+      <button id="resetTodayBtn" class="btnWarn">Reset azi</button>
+    </div>
+
+    <ul id="todayList" class="list"></ul>
+
+    <div class="row">
+      <button id="exportCsvBtn" class="btn2 mini">Export CSV (7 zile)</button>
+      <button id="clearAllBtn" class="btnDanger mini">Șterge TOT (cu grijă)</button>
+    </div>
+    <p class="muted" style="margin-top:10px;">
+      Tip: dacă ai introdus greșit un bon, apasă <span class="kbd">X</span> la bonul respectiv.
+    </p>
+  </div>
+
+  <!-- HISTORY 7 DAYS -->
+  <div class="card">
+    <h2>📊 Istoric 7 zile</h2>
+    <p class="muted" style="margin-top:0;">Ultimele 7 zile (azi inclus). Vezi totalul pe zi.</p>
+    <ul id="historyList" class="list"></ul>
+  </div>
+
+  <!-- MEALS TODAY -->
+  <div class="card">
+    <h2>🍳 Mese (azi)</h2>
+    <p class="muted" style="margin-top:0;">
+      Variat, simplu, mai sănătos. Ajustat după ținta ta de azi.
+    </p>
+
+    <div class="row" style="margin-bottom:10px;">
+      <div class="card ok" style="margin:0; box-shadow:none;">
+        <div class="muted">Ținta AZI</div>
+        <div style="font-size:18px;"><b id="mealBudgetLbl"></b></div>
+      </div>
+      <div class="card ok" style="margin:0; box-shadow:none;">
+        <div class="muted">Cheltuit AZI</div>
+        <div style="font-size:18px;"><b id="mealSpentLbl"></b></div>
+      </div>
+    </div>
+
+    <div id="mealsBox"></div>
+
+    <div style="height:10px"></div>
+    <div class="row">
+      <button id="regenMealsBtn" class="btn2">Schimbă meniul (azi)</button>
+      <button id="markMealsDoneBtn">Bifează mesele (azi)</button>
+    </div>
+    <p id="mealsStatus" class="muted" style="margin-top:10px;"></p>
+  </div>
+
+  <!-- SHOPPING TOMORROW -->
+  <div class="card warnBox">
+    <h2>🛒 Cumpărături pentru MÂINE</h2>
+    <p class="muted" style="margin-top:0;">
+      Aplicația îți generează meniul de mâine + lista de cumpărături. Bifezi și poți copia lista.
+      (La 20:00 îți amintește când aplicația e deschisă; pentru notificare sigură folosește Calendar.)
+    </p>
+
+    <div id="tomorrowMenuBox"></div>
+
+    <div class="hr"></div>
+
+    <div class="row" style="margin-bottom:10px;">
+      <button id="regenTomorrowBtn" class="btn2">Schimbă meniul (mâine)</button>
+      <button id="copyShopBtn">Copiază lista</button>
+    </div>
+
+    <ul id="shopList" class="list"></ul>
+
+    <div class="row">
+      <button id="clearShopChecksBtn" class="btn2 mini">Debifează tot</button>
+      <button id="calShopBtn" class="btn2 mini">Calendar 20:00 (sigur)</button>
+    </div>
+
+    <p id="shopStatus" class="muted" style="margin-top:10px;"></p>
+  </div>
+
+  <!-- STREAK -->
+  <div class="card">
+    <h2>✅ Ziua de azi (streak)</h2>
+    <p class="muted" style="margin-top:0;">Apeși când ai respectat ziua (fără alcool / rutină ok).</p>
+
+    <div class="row" style="margin-bottom:10px;">
+      <div class="card ok" style="margin:0; box-shadow:none;">
+        <div class="muted">Streak curent</div>
+        <div style="font-size:22px;"><b id="streakLbl"></b> zile</div>
+      </div>
+      <div class="card ok" style="margin:0; box-shadow:none;">
+        <div class="muted">Ultima zi bifată</div>
+        <div style="font-size:16px;"><b id="lastDoneLbl"></b></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <button id="doneBtn">Am respectat ziua</button>
+      <button id="undoBtn" class="btn2">Anulează azi</button>
+    </div>
+
+    <p id="status" class="muted" style="margin-top:10px;"></p>
+  </div>
+
+<script>
+  // ===== SETTINGS =====
+  const WEEKLY_BUDGET = 50;
+
+  // ===== HELPERS =====
+  const money = (n) => `${Number(n || 0).toFixed(2)} €`;
+  const pad = (n)=>String(n).padStart(2,"0");
+  function ymd(d = new Date()) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+  function dayNameRo(d = new Date()) { return d.toLocaleDateString("ro-RO", { weekday: "long" }); }
+  function addDays(d, n){ const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+  function loadJSON(key, fallback){ try { return JSON.parse(localStorage.getItem(key) || ""); } catch { return fallback; } }
+  function saveJSON(key, obj){ localStorage.setItem(key, JSON.stringify(obj)); }
+  function weekStartMonday(d = new Date()){
+    const x = new Date(d);
+    const day = x.getDay();
+    const diff = (day === 0 ? -6 : 1 - day);
+    x.setDate(x.getDate() + diff);
+    x.setHours(0,0,0,0);
+    return x;
+  }
+  function escapeHtml(s){
+    return String(s || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+  }
+
+  // ===== EXPENSES =====
+  // expensesByDay: { "YYYY-MM-DD": [{id, amount, cat, note, ts}] }
+  function cryptoId(){ return Math.random().toString(16).slice(2) + "-" + Date.now().toString(16); }
+  function getExpensesByDay(){ return loadJSON("expensesByDay", {}); }
+  function setExpensesByDay(obj){ saveJSON("expensesByDay", obj); }
+  function getTodayExpenses(){ const all = getExpensesByDay(); return Array.isArray(all[ymd()]) ? all[ymd()] : []; }
+  function addExpense(amount, cat, note){
+    const v = Number(amount);
+    if (!isFinite(v) || v <= 0) return false;
+    const all = getExpensesByDay();
+    const k = ymd();
+    if (!Array.isArray(all[k])) all[k] = [];
+    all[k].unshift({ id: cryptoId(), amount: v, cat, note: note || "", ts: Date.now() });
+    setExpensesByDay(all);
+    return true;
+  }
+  function removeExpense(id){
+    const all = getExpensesByDay();
+    const k = ymd();
+    all[k] = (all[k] || []).filter(x => x.id !== id);
+    setExpensesByDay(all);
+  }
+  function resetToday(){
+    const all = getExpensesByDay();
+    all[ymd()] = [];
+    setExpensesByDay(all);
+    // reset meals done today
+    const meals = loadJSON("mealsByDay", {});
+    if (meals[ymd()]) meals[ymd()].done = false;
+    saveJSON("mealsByDay", meals);
+  }
+  function totalForDay(dayKey){
+    const all = getExpensesByDay();
+    const arr = Array.isArray(all[dayKey]) ? all[dayKey] : [];
+    return arr.reduce((s,x)=>s + Number(x.amount||0), 0);
+  }
+  function sumWeekSpends(refDate = new Date()){
+    const start = weekStartMonday(refDate);
+    let total = 0;
+    for (let i=0;i<7;i++){
+      const d = new Date(start);
+      d.setDate(start.getDate()+i);
+      total += totalForDay(ymd(d));
+    }
+    return total;
+  }
+  function daysRemainingInWeek(d = new Date()){
+    const day = d.getDay();
+    const idx = (day === 0) ? 6 : (day - 1);
+    return 7 - idx; // include today
+  }
+  function calcTodayAllowance(){
+    const spentWeek = sumWeekSpends(new Date());
+    const remaining = Math.max(0, WEEKLY_BUDGET - spentWeek);
+    const left = daysRemainingInWeek(new Date());
+    return remaining / Math.max(1, left);
+  }
+
+  // ===== STREAK =====
+  function getStreak(){ return loadJSON("streak", { count:0, lastDone:"" }); }
+  function setStreak(s){ saveJSON("streak", s); }
+  function daysBetween(aYmd, bYmd){
+    const a = new Date(aYmd + "T00:00:00");
+    const b = new Date(bYmd + "T00:00:00");
+    return Math.round((b-a)/(1000*60*60*24));
+  }
+  function markDoneToday(){
+    const today = ymd();
+    const st = getStreak();
+    if (!st.lastDone) { st.count=1; st.lastDone=today; setStreak(st); return; }
+    if (st.lastDone === today) return;
+    const diff = daysBetween(st.lastDone, today);
+    st.count = (diff===1) ? (st.count+1) : 1;
+    st.lastDone = today;
+    setStreak(st);
+  }
+  function undoDoneToday(){
+    const today = ymd();
+    const st = getStreak();
+    if (st.lastDone !== today) return;
+    st.lastDone=""; st.count=0;
+    setStreak(st);
+  }
+
+  // ===== MEALS =====
+  const MEAL_POOL = {
+    breakfast: [
+      { t:"Iaurt grecesc + banană + nuci", notes:"Rapid, proteine." },
+      { t:"Omletă 2 ouă + roșii + pâine integrală", notes:"Simplu." },
+      { t:"Ovăz cu lapte + măr + scorțișoară", notes:"Energie stabilă." },
+      { t:"Sandwich ton + salată", notes:"Bun la muncă." }
+    ],
+    lunch: [
+      { t:"Pui + orez + legume", notes:"Meal-prep." },
+      { t:"Curcan + cartofi + salată", notes:"Sățios." },
+      { t:"Paste integrale + sos roșii + ton", notes:"Ieftin și bun." },
+      { t:"Salată mare cu ou + brânză + pâine", notes:"Ușor." }
+    ],
+    dinner: [
+      { t:"Pește + legume la cuptor", notes:"Ușor seara." },
+      { t:"Supă/cremă legume + pâine", notes:"Calm pentru somn." },
+      { t:"Tocăniță legume + carne slabă", notes:"Simplu." },
+      { t:"Orez + ou + legume (stir-fry)", notes:"Rapid." }
+    ]
+  };
+
+  // mapping: meal title -> shopping items (simple & practical)
+  const SHOP_MAP = {
+    "Iaurt grecesc + banană + nuci": ["iaurt grecesc", "banane", "nuci/migdale"],
+    "Omletă 2 ouă + roșii + pâine integrală": ["ouă", "roșii", "pâine integrală", "ulei/unt"],
+    "Ovăz cu lapte + măr + scorțișoară": ["ovăz", "lapte", "mere", "scorțișoară"],
+    "Sandwich ton + salată": ["ton conservă", "pâine", "salată", "porumb (opțional)", "iaurt/maioneză (opțional)"],
+
+    "Pui + orez + legume": ["piept pui", "orez", "legume (mix)", "ulei", "condimente"],
+    "Curcan + cartofi + salată": ["curcan", "cartofi", "salată", "roșii/castraveți", "ulei + oțet"],
+    "Paste integrale + sos roșii + ton": ["paste integrale", "roșii/sos", "ton conservă", "usturoi (opțional)"],
+    "Salată mare cu ou + brânză + pâine": ["ouă", "brânză", "salată", "pâine", "roșii/castraveți"],
+
+    "Pește + legume la cuptor": ["pește", "legume (broccoli/morcovi)", "lămâie", "ulei", "condimente"],
+    "Supă/cremă legume + pâine": ["legume supă (morcovi/ceapă)", "cartofi", "smântână (opțional)", "pâine"],
+    "Tocăniță legume + carne slabă": ["carne slabă", "ceapă", "ardei", "roșii", "condimente"],
+    "Orez + ou + legume (stir-fry)": ["orez", "ouă", "legume (mix)", "sos soia (opțional)"]
+  };
+
+  function mulberry32(a){
+    return function(){
+      let t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+  }
+
+  // mealsByDay: { "YYYY-MM-DD": { menu, done } }
+  function getMealsByDay(){ return loadJSON("mealsByDay", {}); }
+  function setMealsByDay(obj){ saveJSON("mealsByDay", obj); }
+
+  function pickMenuForDate(dateObj, force=false){
+    const k = ymd(dateObj);
+    const all = getMealsByDay();
+    if (!force && all[k] && all[k].menu) return all[k].menu;
+
+    const seed = Number(k.split("-").join("")) || 1;
+    const rng = mulberry32(seed);
+
+    const menu = {
+      breakfast: MEAL_POOL.breakfast[Math.floor(rng()*MEAL_POOL.breakfast.length)],
+      lunch: MEAL_POOL.lunch[Math.floor(rng()*MEAL_POOL.lunch.length)],
+      dinner: MEAL_POOL.dinner[Math.floor(rng()*MEAL_POOL.dinner.length)],
+      tip: rng() > 0.5 ? "Apă + 10 min mers." : "Fără alcool azi. Doar ziua de azi."
+    };
+
+    all[k] = all[k] || { done:false };
+    all[k].menu = menu;
+    setMealsByDay(all);
+    return menu;
+  }
+
+  function markMealsDoneToday(){
+    const k = ymd();
+    const all = getMealsByDay();
+    all[k] = all[k] || {};
+    all[k].done = true;
+    setMealsByDay(all);
+  }
+  function mealsDoneToday(){
+    const all = getMealsByDay();
+    return !!(all[ymd()] && all[ymd()].done);
+  }
+
+  // ===== SHOPPING LIST =====
+  // shopChecks: { "YYYY-MM-DD": { "item": true/false } } for tomorrow date key
+  function getShopChecks(){ return loadJSON("shopChecks", {}); }
+  function setShopChecks(obj){ saveJSON("shopChecks", obj); }
+
+  function buildShoppingListForMenu(menu){
+    const titles = [menu.breakfast.t, menu.lunch.t, menu.dinner.t];
+    const items = [];
+    for (const t of titles){
+      const mapped = SHOP_MAP[t] || [];
+      for (const it of mapped) items.push(it);
+    }
+    // dedupe + normalize
+    const uniq = [...new Set(items.map(s => s.trim().toLowerCase()))]
+      .filter(Boolean)
+      .sort((a,b)=>a.localeCompare(b));
+    return uniq;
+  }
+
+  async function tryNotifyAt20WhenOpen(){
+    // when app is open, if time is >=20:00 and not fired today, show a notification
+    if (!("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+
+    const firedKey = "shopNotifFired";
+    const today = ymd();
+    const fired = loadJSON(firedKey, { date:"" });
+    const now = new Date();
+
+    if (fired.date === today) return;
+    if (now.getHours() < 20) return;
+
+    fired.date = today;
+    saveJSON(firedKey, fired);
+
+    const msg = "E 20:00 — verifică lista de cumpărături pentru mâine.";
+    if ("serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) reg.showNotification("Rutina Mea", { body: msg });
+      else new Notification("Rutina Mea", { body: msg });
+    } else {
+      new Notification("Rutina Mea", { body: msg });
+    }
+  }
+
+  // Calendar helper
+  function addCalendarEvent(title, hh, mm) {
+    const now = new Date();
+    let start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0);
+    let end = new Date(start.getTime()+10*60*1000);
+    if (start < new Date()) { start.setDate(start.getDate()+1); end.setDate(end.getDate()+1); }
+    const fmt = (d)=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+    const ics =
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Rutina Mea//RO
+BEGIN:VEVENT
+DTSTART:${fmt(start)}
+DTEND:${fmt(end)}
+RRULE:FREQ=DAILY
+SUMMARY:${title}
+DESCRIPTION:Rutina Mea reminder
+END:VEVENT
+END:VCALENDAR`;
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "rutina-mea.ics";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  }
+
+  async function enableNotifications(){
+    if (!("Notification" in window)) return { ok:false, msg:"Notificările nu sunt suportate aici." };
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") return { ok:false, msg:"Permisiunea nu a fost acordată." };
+    return { ok:true, msg:"Notificările sunt activate." };
+  }
+
+  // ===== UI refs =====
+  const dateEl = document.getElementById("date");
+  const weeklyBudgetLbl = document.getElementById("weeklyBudgetLbl");
+  const dowLbl = document.getElementById("dowLbl");
+  const spentWeekLbl = document.getElementById("spentWeekLbl");
+  const remainWeekLbl = document.getElementById("remainWeekLbl");
+  const todayAllowanceLbl = document.getElementById("todayAllowanceLbl");
+  const todaySpentLbl = document.getElementById("todaySpentLbl");
+  const budgetNote = document.getElementById("budgetNote");
+  const todayList = document.getElementById("todayList");
+  const historyList = document.getElementById("historyList");
+
+  const streakLbl = document.getElementById("streakLbl");
+  const lastDoneLbl = document.getElementById("lastDoneLbl");
+  const statusEl = document.getElementById("status");
+
+  const mealsBox = document.getElementById("mealsBox");
+  const mealsStatus = document.getElementById("mealsStatus");
+  const mealBudgetLbl = document.getElementById("mealBudgetLbl");
+  const mealSpentLbl = document.getElementById("mealSpentLbl");
+
+  // shopping refs
+  const tomorrowMenuBox = document.getElementById("tomorrowMenuBox");
+  const shopListEl = document.getElementById("shopList");
+  const shopStatusEl = document.getElementById("shopStatus");
+
+  // ===== Render helpers =====
+  function itemsCountText(dayKey){
+    const all = getExpensesByDay();
+    const arr = Array.isArray(all[dayKey]) ? all[dayKey] : [];
+    return arr.length ? `${arr.length} bon(uri)` : `0 bonuri`;
+  }
+
+  function renderMenu(menu){
+    return `
+      <div class="card" style="margin:0 0 10px 0; box-shadow:none;">
+        <b>Mic dejun:</b> ${escapeHtml(menu.breakfast.t)}<br>
+        <span class="muted">${escapeHtml(menu.breakfast.notes)}</span>
+      </div>
+      <div class="card" style="margin:0 0 10px 0; box-shadow:none;">
+        <b>Prânz:</b> ${escapeHtml(menu.lunch.t)}<br>
+        <span class="muted">${escapeHtml(menu.lunch.notes)}</span>
+      </div>
+      <div class="card" style="margin:0; box-shadow:none;">
+        <b>Cină:</b> ${escapeHtml(menu.dinner.t)}<br>
+        <span class="muted">${escapeHtml(menu.dinner.notes)}</span><br>
+        <div class="hr"></div>
+        <b>Tip:</b> ${escapeHtml(menu.tip)}
+      </div>
+    `;
+  }
+
+  function renderTomorrowMenu(menu, dateObj){
+    const label = `${ymd(dateObj)} (${dayNameRo(dateObj)})`;
+    return `
+      <div class="pill">Mâine: <b>${label}</b></div>
+      <div class="hr"></div>
+      ${renderMenu(menu)}
+    `;
+  }
+
+  function renderShoppingList(items, dateKey){
+    const checksAll = getShopChecks();
+    const checks = checksAll[dateKey] || {};
+    shopListEl.innerHTML = "";
+
+    if (!items.length) {
+      shopListEl.innerHTML = `<li class="muted">Nu am găsit ingrediente pentru meniul ăsta.</li>`;
+      return;
+    }
+
+    let done = 0;
+    for (const it of items){
+      const checked = !!checks[it];
+      if (checked) done++;
+
+      const li = document.createElement("li");
+      li.className = "item";
+      li.innerHTML = `
+        <input class="check" type="checkbox" ${checked ? "checked" : ""} data-item="${escapeHtml(it)}">
+        <div class="grow"><b>${escapeHtml(it)}</b></div>
+      `;
+      shopListEl.appendChild(li);
+    }
+
+    shopListEl.querySelectorAll("input[type=checkbox]").forEach(cb => {
+      cb.addEventListener("change", () => {
+        const item = cb.getAttribute("data-item");
+        const all = getShopChecks();
+        all[dateKey] = all[dateKey] || {};
+        all[dateKey][item] = cb.checked;
+        setShopChecks(all);
+        render(); // update progress text
+      });
+    });
+
+    shopStatusEl.textContent = `Bifate: ${done}/${items.length}`;
+  }
+
+  // ===== Main render =====
+  async function render(){
+    dateEl.textContent = new Date().toLocaleDateString("ro-RO", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+
+    weeklyBudgetLbl.textContent = money(WEEKLY_BUDGET);
+    dowLbl.textContent = dayNameRo(new Date());
+
+    const spentWeek = sumWeekSpends(new Date());
+    const remainWeek = Math.max(0, WEEKLY_BUDGET - spentWeek);
+    const todaySpend = totalForDay(ymd());
+    const allowance = calcTodayAllowance();
+
+    spentWeekLbl.textContent = money(spentWeek);
+    remainWeekLbl.textContent = money(remainWeek);
+    todayAllowanceLbl.textContent = money(allowance);
+    todaySpentLbl.textContent = money(todaySpend);
+
+    if (todaySpend > allowance) budgetNote.textContent = `Azi ai depășit ținta cu ${money(todaySpend - allowance)}. Mâine compensezi ușor.`;
+    else budgetNote.textContent = `Ești bine: sub ținta de azi cu ${money(allowance - todaySpend)}.`;
+
+    // today expenses list
+    const items = getTodayExpenses();
+    todayList.innerHTML = "";
+    if (!items.length) {
+      todayList.innerHTML = `<li class="muted">Nu ai bonuri azi (încă).</li>`;
+    } else {
+      for (const it of items) {
+        const li = document.createElement("li");
+        li.className = "item";
+        li.innerHTML = `
+          <div class="grow">
+            <div><span class="amount">${money(it.amount)}</span> <span class="pill">${escapeHtml(it.cat)}</span></div>
+            <div class="muted">${escapeHtml(it.note || "—")}</div>
+          </div>
+          <button class="btnDanger mini" data-id="${it.id}" style="width:auto;">X</button>
+        `;
+        todayList.appendChild(li);
+      }
+      todayList.querySelectorAll("button[data-id]").forEach(btn => {
+        btn.addEventListener("click", () => { removeExpense(btn.getAttribute("data-id")); render(); });
+      });
+    }
+
+    // history 7 days
+    const now = new Date();
+    historyList.innerHTML = "";
+    for (let i=0;i<7;i++){
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const k = ymd(d);
+      const t = totalForDay(k);
+      const li = document.createElement("li");
+      li.className = "item";
+      li.innerHTML = `
+        <div class="grow">
+          <div><b>${k}</b> <span class="pill">${dayNameRo(d)}</span></div>
+          <div class="muted">${itemsCountText(k)}</div>
+        </div>
+        <div class="amount">${money(t)}</div>
+      `;
+      historyList.appendChild(li);
+    }
+
+    // meals today
+    const menuToday = pickMenuForDate(new Date(), false);
+    mealsBox.innerHTML = renderMenu(menuToday);
+    mealBudgetLbl.textContent = money(allowance);
+    mealSpentLbl.textContent = money(todaySpend);
+    mealsStatus.textContent = mealsDoneToday() ? "✔ Mesele sunt bifate azi." : "Mesele nu sunt bifate încă.";
+
+    // meals tomorrow + shopping list
+    const tomorrow = addDays(new Date(), 1);
+    const menuTomorrow = pickMenuForDate(tomorrow, false);
+    tomorrowMenuBox.innerHTML = renderTomorrowMenu(menuTomorrow, tomorrow);
+
+    const shopItems = buildShoppingListForMenu(menuTomorrow);
+    renderShoppingList(shopItems, ymd(tomorrow));
+
+    // streak
+    const st = getStreak();
+    streakLbl.textContent = String(st.count || 0);
+    lastDoneLbl.textContent = st.lastDone ? st.lastDone : "—";
+    statusEl.textContent = st.lastDone === ymd() ? "✔ Azi e bifată. Ține ritmul." : "Încă nu ai bifat azi.";
+
+    // try a 20:00 reminder when open (if allowed)
+    await tryNotifyAt20WhenOpen();
+  }
+
+  // ===== Actions =====
+  document.getElementById("addExpenseBtn").addEventListener("click", () => {
+    const amount = document.getElementById("expAmount").value;
+    const cat = document.getElementById("expCat").value;
+    const note = document.getElementById("expNote").value;
+    const ok = addExpense(amount, cat, note);
+    if (!ok) return;
+    document.getElementById("expAmount").value = "";
+    document.getElementById("expNote").value = "";
+    render();
+  });
+
+  document.getElementById("resetTodayBtn").addEventListener("click", () => { resetToday(); render(); });
+
+  document.getElementById("exportCsvBtn").addEventListener("click", () => {
+    // keep previous behavior via CSV export
+    const today = new Date();
+    const rows = [["date","total","items"]];
+    for (let i=6;i>=0;i--){
+      const d = new Date(today);
+      d.setDate(today.getDate()-i);
+      const k = ymd(d);
+      const all = getExpensesByDay();
+      const arr = (all[k]||[]);
+      const items = arr.map(x => `${x.cat}:${x.amount}${x.note?`(${x.note})`:""}`).join(" | ");
+      rows.push([k, String(totalForDay(k).toFixed(2)), `"${items.replaceAll('"','""')}"`]);
+    }
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "rutina-mea-7zile.csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  });
+
+  document.getElementById("clearAllBtn").addEventListener("click", () => {
+    const key = "clearAllArmed";
+    const armed = localStorage.getItem(key) === "1";
+    if (!armed) { localStorage.setItem(key,"1"); alert("Atenție: apasă încă o dată pe „Șterge TOT” ca să confirmi."); return; }
+    localStorage.removeItem(key);
+    localStorage.removeItem("expensesByDay");
+    localStorage.removeItem("streak");
+    localStorage.removeItem("mealsByDay");
+    localStorage.removeItem("shopChecks");
+    render();
+  });
+
+  document.getElementById("regenMealsBtn").addEventListener("click", () => { pickMenuForDate(new Date(), true); render(); });
+  document.getElementById("markMealsDoneBtn").addEventListener("click", () => { markMealsDoneToday(); render(); });
+
+  document.getElementById("doneBtn").addEventListener("click", () => { markDoneToday(); render(); });
+  document.getElementById("undoBtn").addEventListener("click", () => { undoDoneToday(); render(); });
+
+  // Shopping actions
+  document.getElementById("regenTomorrowBtn").addEventListener("click", () => {
+    const tomorrow = addDays(new Date(), 1);
+    pickMenuForDate(tomorrow, true);
+    render();
+  });
+
+  document.getElementById("copyShopBtn").addEventListener("click", async () => {
+    const tomorrow = addDays(new Date(), 1);
+    const menuTomorrow = pickMenuForDate(tomorrow, false);
+    const items = buildShoppingListForMenu(menuTomorrow);
+    const text = [
+      `Cumpărături pentru ${ymd(tomorrow)} (${dayNameRo(tomorrow)}):`,
+      ...items.map(x => `- ${x}`)
+    ].join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      shopStatusEl.textContent = "✅ Listă copiată.";
+    } catch {
+      shopStatusEl.textContent = "Nu am putut copia automat. (În unele browsere e blocat.)";
+      alert(text);
+    }
+  });
+
+  document.getElementById("clearShopChecksBtn").addEventListener("click", () => {
+    const tomorrow = addDays(new Date(), 1);
+    const key = ymd(tomorrow);
+    const all = getShopChecks();
+    all[key] = {};
+    setShopChecks(all);
+    render();
+  });
+
+  document.getElementById("calShopBtn").addEventListener("click", () => addCalendarEvent("Rutina Mea — Cumpărături 20:00", 20, 0));
+
+  // Notifications permission (optional)
+  // (You can add a button later if you want, but this keeps it clean.)
+
+  // Service worker
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  }
+
+  render();
+</script>
+</body>
+</html><!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rutina Mea</title>
+  <meta name="theme-color" content="#2ecc71">
+  <link rel="manifest" href="manifest.json" />
+
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f6f8; margin:0; padding:20px; }
+    .card { background:#fff; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+    h1,h2{ margin:0 0 10px 0; }
+    .muted{color:#666; font-size:14px;}
+    .pill{display:inline-block; padding:4px 10px; border-radius:999px; background:#eef2f7; font-size:13px; margin-right:6px; margin-bottom:6px;}
+    .row{display:flex; gap:10px; flex-wrap:wrap;}
+    .row > *{flex:1; min-width:140px;}
+    input, select, textarea { width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-top:6px; box-sizing:border-box;}
+    button { width:100%; padding:12px; border:0; border-radius:8px; background:#2ecc71; color:#fff; font-size:16px; }
+    .btn2{background:#1f2937;}
+    .btnWarn{background:#e67e22;}
+    .btnDanger{background:#e74c3c;}
+    .mini{font-size:13px; padding:10px;}
+    .ok{background:#e8fff0;}
+    .warnBox{background:#fff7e6;}
+    .list{margin:10px 0 0 0; padding:0; list-style:none;}
+    .item{display:flex; gap:10px; align-items:center; padding:10px; border:1px solid #eee; border-radius:10px; margin-bottom:8px;}
+    .item .grow{flex:1;}
+    .amount{font-weight:bold;}
+    .hr{height:1px; background:#eee; margin:10px 0;}
+    .kbd{font-family: ui-monospace, Menlo, Consolas, monospace; background:#f2f2f2; padding:2px 6px; border-radius:6px;}
   </style>
 </head>
 
