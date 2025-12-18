@@ -17,6 +17,514 @@
     .muted{color:#666; font-size:14px;}
     .row{display:flex; gap:10px;}
     .row > *{flex:1;}
+    .btn2{background:#1f2937;}
+    .btnWarn{background:#e67e22;}
+    .pill{display:inline-block; padding:4px 10px; border-radius:999px; background:#eef2f7; font-size:13px; margin-right:6px;}
+    .ok{background:#e8fff0;}
+  </style>
+</head>
+
+<body>
+  <h1>📅 Rutina Mea</h1>
+  <p id="date" class="muted"></p>
+
+  <div class="card">
+    <h2>⏰ Program</h2>
+    <p>Trezire: <b>05:50</b></p>
+    <p>Lucru: <b>07:00</b></p>
+    <p class="muted">Start: 1 ianuarie 2026</p>
+  </div>
+
+  <div class="card">
+    <h2>💰 Buget (7 zile)</h2>
+    <div style="margin-bottom:10px;">
+      <span class="pill">Buget săptămânal: <b id="weeklyBudgetLbl"></b></span>
+      <span class="pill">Zi săptămână: <b id="dowLbl"></b></span>
+    </div>
+
+    <p class="muted" style="margin:0 0 10px 0;">
+      Săptămâna curentă (Luni–Duminică). Aplicația face reset zilnic automat.
+    </p>
+
+    <div class="row" style="margin-bottom:10px;">
+      <div class="card ok" style="margin:0; box-shadow:none;">
+        <div class="muted">Cheltuit săptămâna asta</div>
+        <div style="font-size:20px;"><b id="spentWeekLbl"></b></div>
+      </div>
+      <div class="card ok" style="margin:0; box-shadow:none;">
+        <div class="muted">Rămas săptămâna asta</div>
+        <div style="font-size:20px;"><b id="remainWeekLbl"></b></div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-bottom:10px;">
+      <div class="card" style="margin:0; box-shadow:none;">
+        <div class="muted">Ținta pentru AZI (automat)</div>
+        <div style="font-size:18px;"><b id="todayAllowanceLbl"></b></div>
+      </div>
+      <div class="card" style="margin:0; box-shadow:none;">
+        <div class="muted">Cheltuit AZI</div>
+        <div style="font-size:18px;"><b id="todaySpentLbl"></b></div>
+      </div>
+    </div>
+
+    <label>Introdu totalul cheltuit azi (€):</label>
+    <input type="number" id="spentTodayInput" placeholder="ex: 12.50" inputmode="decimal">
+
+    <div style="height:10px"></div>
+    <div class="row">
+      <button id="saveTodayBtn">Salvează azi</button>
+      <button id="resetTodayBtn" class="btnWarn">Reset azi</button>
+    </div>
+
+    <p id="budgetNote" class="muted" style="margin-top:10px;"></p>
+  </div>
+
+  <div class="card">
+    <h2>✅ Ziua de azi (streak)</h2>
+    <p class="muted" style="margin-top:0;">
+      Apeși când ai respectat ziua (fără alcool / rutină ok).
+    </p>
+
+    <div class="row" style="margin-bottom:10px;">
+      <div class="card ok" style="margin:0; box-shadow:none;">
+        <div class="muted">Streak curent</div>
+        <div style="font-size:22px;"><b id="streakLbl"></b> zile</div>
+      </div>
+      <div class="card ok" style="margin:0; box-shadow:none;">
+        <div class="muted">Ultima zi bifată</div>
+        <div style="font-size:16px;"><b id="lastDoneLbl"></b></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <button id="doneBtn">Am respectat ziua</button>
+      <button id="undoBtn" class="btn2">Anulează azi</button>
+    </div>
+
+    <p id="status" class="muted" style="margin-top:10px;"></p>
+  </div>
+
+  <div class="card">
+    <h2>🔔 Notificări</h2>
+    <p class="muted" style="margin-top:0;">
+      În browser/PWA fără server, notificările 100% „ca alarmă” nu sunt mereu garantate.
+      Dar poți:
+      <br>✅ activa notificări când aplicația e deschisă
+      <br>✅ adăuga orele în Calendar (notificări reale).
+    </p>
+
+    <div class="row" style="margin-bottom:10px;">
+      <button id="enableNotifsBtn">Activează notificările</button>
+      <button id="testNotifBtn" class="btn2">Test notificare</button>
+    </div>
+
+    <div class="row">
+      <button id="calWakeBtn" class="btn2">Adaugă 05:50 în Calendar</button>
+      <button id="calDinnerBtn" class="btn2">Adaugă 18:00 în Calendar</button>
+    </div>
+    <div style="height:10px"></div>
+    <button id="calShopBtn" class="btn2">Adaugă 20:00 în Calendar</button>
+
+    <p id="notifStatus" class="muted" style="margin-top:10px;"></p>
+  </div>
+
+  <script>
+    // ====== SETTINGS ======
+    const WEEKLY_BUDGET = 50;
+    const REMINDERS = [
+      { hh: 5, mm: 50, title: "Rutina Mea", body: "Trezire. Începe ușor: apă + 2 minute respirație." },
+      { hh: 18, mm: 0, title: "Rutina Mea", body: "Cina: ceva simplu și sănătos. Pregătește planul." },
+      { hh: 20, mm: 0, title: "Rutina Mea", body: "Cumpărături pentru mâine: ia strict ce trebuie." }
+    ];
+
+    // ====== HELPERS ======
+    const money = (n) => `${Number(n).toFixed(2)} €`;
+
+    function ymd(d = new Date()) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,"0");
+      const day = String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    }
+
+    // Monday start of week (ISO-like)
+    function weekStartMonday(d = new Date()) {
+      const x = new Date(d);
+      const day = x.getDay(); // 0=Sun..6=Sat
+      const diff = (day === 0 ? -6 : 1 - day); // move back to Monday
+      x.setDate(x.getDate() + diff);
+      x.setHours(0,0,0,0);
+      return x;
+    }
+
+    function dayNameRo(d = new Date()) {
+      return d.toLocaleDateString("ro-RO", { weekday: "long" });
+    }
+
+    function loadJSON(key, fallback) {
+      try { return JSON.parse(localStorage.getItem(key) || ""); }
+      catch { return fallback; }
+    }
+    function saveJSON(key, obj) {
+      localStorage.setItem(key, JSON.stringify(obj));
+    }
+
+    // ====== DATA MODEL ======
+    // "dailySpends" : { "YYYY-MM-DD": number }
+    // "streak" : { count: number, lastDone: "YYYY-MM-DD" }
+    // "meta" : { lastSeen: "YYYY-MM-DD" }
+
+    function ensureDailyReset() {
+      const meta = loadJSON("meta", { lastSeen: null });
+      const today = ymd();
+
+      if (!meta.lastSeen) {
+        meta.lastSeen = today;
+        saveJSON("meta", meta);
+        return;
+      }
+
+      if (meta.lastSeen !== today) {
+        // New day detected: nothing special needed because we store per-day already.
+        meta.lastSeen = today;
+        saveJSON("meta", meta);
+      }
+    }
+
+    function getDailySpends() {
+      return loadJSON("dailySpends", {});
+    }
+
+    function setTodaySpend(amount) {
+      const daily = getDailySpends();
+      daily[ymd()] = Number(amount) || 0;
+      saveJSON("dailySpends", daily);
+    }
+
+    function getTodaySpend() {
+      const daily = getDailySpends();
+      return Number(daily[ymd()] || 0);
+    }
+
+    function resetToday() {
+      setTodaySpend(0);
+    }
+
+    function sumWeekSpends() {
+      const daily = getDailySpends();
+      const start = weekStartMonday(new Date());
+      const startKey = ymd(start);
+      let total = 0;
+
+      // sum from start of week to today+6
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const k = ymd(d);
+        total += Number(daily[k] || 0);
+      }
+      return { total, startKey };
+    }
+
+    function daysRemainingInWeek() {
+      const d = new Date();
+      const day = d.getDay(); // 0 Sun .. 6 Sat
+      // convert to Monday=0..Sunday=6
+      const idx = (day === 0) ? 6 : (day - 1);
+      return 7 - idx; // including today
+    }
+
+    function calcTodayAllowance() {
+      const { total: spentWeek } = sumWeekSpends();
+      const remaining = Math.max(0, WEEKLY_BUDGET - spentWeek);
+      const daysLeft = daysRemainingInWeek();
+      return remaining / Math.max(1, daysLeft);
+    }
+
+    // ====== STREAK ======
+    function getStreak() {
+      return loadJSON("streak", { count: 0, lastDone: "" });
+    }
+
+    function setStreak(obj) {
+      saveJSON("streak", obj);
+    }
+
+    function daysBetween(aYmd, bYmd) {
+      const a = new Date(aYmd + "T00:00:00");
+      const b = new Date(bYmd + "T00:00:00");
+      const ms = b - a;
+      return Math.round(ms / (1000*60*60*24));
+    }
+
+    function markDoneToday() {
+      const today = ymd();
+      const st = getStreak();
+
+      if (!st.lastDone) {
+        st.count = 1;
+        st.lastDone = today;
+        setStreak(st);
+        return;
+      }
+
+      if (st.lastDone === today) {
+        // already done today
+        return;
+      }
+
+      const diff = daysBetween(st.lastDone, today);
+      if (diff === 1) st.count += 1;
+      else st.count = 1;
+
+      st.lastDone = today;
+      setStreak(st);
+    }
+
+    function undoDoneToday() {
+      const today = ymd();
+      const st = getStreak();
+      if (st.lastDone !== today) return;
+
+      // Roll back: safest simple behavior
+      st.lastDone = "";
+      st.count = 0;
+      setStreak(st);
+    }
+
+    // ====== NOTIFICATIONS ======
+    async function enableNotifications() {
+      if (!("Notification" in window)) {
+        return { ok:false, msg:"Notificările nu sunt suportate pe acest dispozitiv/browser." };
+      }
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") {
+        return { ok:false, msg:"Permisiunea pentru notificări nu a fost acordată." };
+      }
+      return { ok:true, msg:"Notificările sunt activate. (Cele programate pot depinde de browser.)" };
+    }
+
+    function scheduleInAppReminders() {
+      // Works when app is open; checks every 30s and triggers once per day per reminder
+      const today = ymd();
+      const firedKey = "firedReminders";
+      const fired = loadJSON(firedKey, {});
+      if (fired.date !== today) {
+        fired.date = today;
+        fired.items = {};
+        saveJSON(firedKey, fired);
+      }
+
+      setInterval(() => {
+        if (Notification.permission !== "granted") return;
+        const now = new Date();
+        const h = now.getHours(), m = now.getMinutes();
+        for (const r of REMINDERS) {
+          const id = `${r.hh}:${String(r.mm).padStart(2,"0")}`;
+          if (h === r.hh && m === r.mm && !fired.items[id]) {
+            fired.items[id] = true;
+            saveJSON(firedKey, fired);
+            // Try service worker notification (better), fallback to Notification()
+            if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+              navigator.serviceWorker.getRegistration().then(reg => {
+                if (reg) reg.showNotification(r.title, { body: r.body });
+                else new Notification(r.title, { body: r.body });
+              });
+            } else {
+              new Notification(r.title, { body: r.body });
+            }
+          }
+        }
+      }, 30000);
+    }
+
+    function addCalendarEvent(title, hh, mm) {
+      // Creates an .ics file download (works on Android: opens calendar import)
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0);
+      const end = new Date(start.getTime() + 10*60*1000); // 10 min
+
+      // If time already passed today, schedule for tomorrow
+      if (start < new Date()) {
+        start.setDate(start.getDate() + 1);
+        end.setDate(end.getDate() + 1);
+      }
+
+      function fmt(d) {
+        const pad = (n)=>String(n).padStart(2,"0");
+        return d.getFullYear()
+          + pad(d.getMonth()+1)
+          + pad(d.getDate())
+          + "T"
+          + pad(d.getHours())
+          + pad(d.getMinutes())
+          + "00";
+      }
+
+      const ics =
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Rutina Mea//RO
+BEGIN:VEVENT
+DTSTART:${fmt(start)}
+DTEND:${fmt(end)}
+RRULE:FREQ=DAILY
+SUMMARY:${title}
+DESCRIPTION:Rutina Mea reminder
+END:VEVENT
+END:VCALENDAR`;
+
+      const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "rutina-mea.ics";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    }
+
+    // ====== UI ======
+    const dateEl = document.getElementById("date");
+    const weeklyBudgetLbl = document.getElementById("weeklyBudgetLbl");
+    const dowLbl = document.getElementById("dowLbl");
+    const spentWeekLbl = document.getElementById("spentWeekLbl");
+    const remainWeekLbl = document.getElementById("remainWeekLbl");
+    const todayAllowanceLbl = document.getElementById("todayAllowanceLbl");
+    const todaySpentLbl = document.getElementById("todaySpentLbl");
+    const spentTodayInput = document.getElementById("spentTodayInput");
+    const budgetNote = document.getElementById("budgetNote");
+
+    const streakLbl = document.getElementById("streakLbl");
+    const lastDoneLbl = document.getElementById("lastDoneLbl");
+    const statusEl = document.getElementById("status");
+
+    const notifStatus = document.getElementById("notifStatus");
+
+    function render() {
+      ensureDailyReset();
+
+      dateEl.textContent = new Date().toLocaleDateString("ro-RO", {
+        weekday: "long", year: "numeric", month: "long", day: "numeric"
+      });
+
+      weeklyBudgetLbl.textContent = money(WEEKLY_BUDGET);
+      dowLbl.textContent = dayNameRo(new Date());
+
+      const todaySpend = getTodaySpend();
+      spentTodayInput.value = todaySpend ? String(todaySpend) : "";
+      todaySpentLbl.textContent = money(todaySpend);
+
+      const { total: spentWeek } = sumWeekSpends();
+      const remainWeek = Math.max(0, WEEKLY_BUDGET - spentWeek);
+
+      spentWeekLbl.textContent = money(spentWeek);
+      remainWeekLbl.textContent = money(remainWeek);
+
+      const allowance = calcTodayAllowance();
+      todayAllowanceLbl.textContent = money(allowance);
+
+      if (todaySpend > allowance) {
+        budgetNote.textContent = `Azi ai depășit ținta cu ${money(todaySpend - allowance)}. Mâine compensezi ușor.`;
+      } else {
+        budgetNote.textContent = `Ești bine: sub ținta de azi cu ${money(allowance - todaySpend)}.`;
+      }
+
+      const st = getStreak();
+      streakLbl.textContent = String(st.count || 0);
+      lastDoneLbl.textContent = st.lastDone ? st.lastDone : "—";
+      statusEl.textContent = st.lastDone === ymd()
+        ? "✔ Azi e bifată. Ține ritmul."
+        : "Încă nu ai bifat azi.";
+
+      notifStatus.textContent = `Status notificări: ${("Notification" in window) ? Notification.permission : "nesuportat"}`;
+    }
+
+    document.getElementById("saveTodayBtn").addEventListener("click", () => {
+      const v = Number(spentTodayInput.value || 0);
+      setTodaySpend(v);
+      render();
+    });
+
+    document.getElementById("resetTodayBtn").addEventListener("click", () => {
+      resetToday();
+      render();
+    });
+
+    document.getElementById("doneBtn").addEventListener("click", () => {
+      markDoneToday();
+      render();
+    });
+
+    document.getElementById("undoBtn").addEventListener("click", () => {
+      undoDoneToday();
+      render();
+    });
+
+    document.getElementById("enableNotifsBtn").addEventListener("click", async () => {
+      const res = await enableNotifications();
+      notifStatus.textContent = res.msg;
+      if (res.ok) scheduleInAppReminders();
+    });
+
+    document.getElementById("testNotifBtn").addEventListener("click", async () => {
+      const res = await enableNotifications();
+      notifStatus.textContent = res.msg;
+      if (res.ok) {
+        if ("serviceWorker" in navigator) {
+          const reg = await navigator.serviceWorker.getRegistration();
+          if (reg) reg.showNotification("Rutina Mea", { body: "Test notificare ✅" });
+          else new Notification("Rutina Mea", { body: "Test notificare ✅" });
+        } else {
+          new Notification("Rutina Mea", { body: "Test notificare ✅" });
+        }
+      }
+    });
+
+    document.getElementById("calWakeBtn").addEventListener("click", () => {
+      addCalendarEvent("Rutina Mea — Trezire 05:50", 5, 50);
+    });
+    document.getElementById("calDinnerBtn").addEventListener("click", () => {
+      addCalendarEvent("Rutina Mea — Cină 18:00", 18, 0);
+    });
+    document.getElementById("calShopBtn").addEventListener("click", () => {
+      addCalendarEvent("Rutina Mea — Cumpărături 20:00", 20, 0);
+    });
+
+    // Service worker
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(()=>{});
+    }
+
+    render();
+
+    // If already allowed, schedule in-app reminders
+    if (("Notification" in window) && Notification.permission === "granted") {
+      scheduleInAppReminders();
+    }
+  </script>
+</body>
+</html><!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rutina Mea</title>
+
+  <meta name="theme-color" content="#2ecc71">
+  <link rel="manifest" href="manifest.json" />
+
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f6f8; margin:0; padding:20px; }
+    .card { background:#fff; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+    h1,h2{ margin:0 0 10px 0; }
+    button { width:100%; padding:12px; border:0; border-radius:8px; background:#2ecc71; color:#fff; font-size:16px; }
+    input { width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-top:6px; }
+    .muted{color:#666; font-size:14px;}
+    .row{display:flex; gap:10px;}
+    .row > *{flex:1;}
     .btn<!doctype html>
 <html lang="ro">
 <head>
