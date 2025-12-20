@@ -40,3 +40,8 @@ self.addEventListener("install", e => {
 self.addEventListener("fetch", e => {
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
+// în sw.js
+self.addEventListener("notificationclick", function (event) {
+  event.notification.close();
+  event.waitUntil(self.clients.openWindow("./"));
+});
