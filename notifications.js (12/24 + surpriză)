@@ -1,0 +1,49 @@
+// notifications.js
+import { relaxed } from "./budget.js";
+
+function keyToday() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+export async function askNotificationPermission() {
+  if (!("Notification" in window)) return false;
+  if (Notification.permission === "granted") return true;
+  const p = await Notification.requestPermission();
+  return p === "granted";
+}
+
+function notify(title, body) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification(title, { body });
+  }
+}
+
+export function monthlyReminders() {
+  const day = new Date().getDate();
+  const t = keyToday();
+
+  if (day === 12 && localStorage.getItem("bill12") !== t) {
+    notify("Plată: Telefon + Internet", "Azi e 12. Plătește telefon/internet.");
+    localStorage.setItem("bill12", t);
+  }
+
+  if (day === 24 && localStorage.getItem("bill24") !== t) {
+    notify("Plată: Gaz + Curent", "Azi e 24. Plătește gaz/curent.");
+    localStorage.setItem("bill24", t);
+  }
+}
+
+export function weekendSurprise(budgetResult) {
+  const dow = new Date().getDay(); // 5 vineri, 6 sâmbătă
+  if (!(dow === 5 || dow === 6)) return;
+
+  const t = keyToday();
+  const last = localStorage.getItem("wk");
+  if (last === t) return;
+
+  if (relaxed(budgetResult, 20)) {
+    notify("Surpriză de weekend 🎉", "Ai buget pentru o mică ieșire bună și ieftină.");
+    localStorage.setItem("wk", t);
+  }
+}
