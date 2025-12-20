@@ -1,4 +1,110 @@
-<script type="module" src="budget.js"></script>
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="stylesheet" href="./styles.css" />
+  <title>Rutina & Buget</title>
+</head>
+
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Rutina Mea</h1>
+      <p class="muted">Structură fixă. Nu te mai gândești zilnic.</p>
+      <button id="installBtn" class="btn">Instalează aplicația</button>
+    </header>
+
+    <section class="card">
+      <h2>Plan financiar</h2>
+
+      <div class="grid">
+        <label>Venit săptămânal (€)
+          <input id="incomeWeekly" type="number" inputmode="decimal" />
+        </label>
+
+        <label>Mâncare / săptămână (€)
+          <input id="foodWeekly" type="number" inputmode="decimal" />
+        </label>
+
+        <label>Altele / săptămână (€)
+          <input id="miscWeekly" type="number" inputmode="decimal" />
+        </label>
+      </div>
+
+      <h3>Cheltuieli fixe</h3>
+      <div class="grid">
+        <label>Chirie / lună (€)
+          <input id="rentMonthly" type="number" inputmode="decimal" />
+        </label>
+
+        <label>Gaz+Curent / lună (€)
+          <input id="gasElectricMonthly" type="number" inputmode="decimal" />
+        </label>
+
+        <label>Telefon+Internet / lună (€)
+          <input id="phoneInternetMonthly" type="number" inputmode="decimal" />
+        </label>
+
+        <label>Apă / 3 luni (€)
+          <input id="waterQuarterly" type="number" inputmode="decimal" />
+        </label>
+
+        <label>Datorii apartament / lună (€)
+          <input id="aptDebtsMonthly" type="number" inputmode="decimal" />
+        </label>
+      </div>
+
+      <div class="hr"></div>
+
+      <ul class="summary">
+        <li>Fixe pe săptămână: <b id="fixedW">-</b></li>
+        <li>Rate minime datorii: <b id="minDebtsW">-</b></li>
+        <li>Rămas după tot: <b id="leftW">-</b></li>
+        <li>Status: <b id="status">-</b></li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Datorii</h2>
+      <p class="muted">Nu contează cui. Contează să respecți suma.</p>
+
+      <div class="grid">
+        <label>Nume
+          <input id="debtName" type="text" />
+        </label>
+
+        <label>Total (€)
+          <input id="debtTotal" type="number" inputmode="decimal" />
+        </label>
+
+        <label>Minim / săptămână (€)
+          <input id="debtMinWeekly" type="number" inputmode="decimal" />
+        </label>
+
+        <label>Prioritate (1 urgent)
+          <input id="debtPriority" type="number" inputmode="numeric" value="1" />
+        </label>
+      </div>
+
+      <button id="addDebtBtn" class="btn">+ Adaugă datorie</button>
+
+      <div class="hr"></div>
+      <div id="debtsList"></div>
+    </section>
+
+    <section class="card">
+      <h2>Rutina</h2>
+      <p class="muted">Aici păstrezi ce ai deja (o mutăm după ce baza e stabilă).</p>
+      <button id="dayOkBtn" class="btn ok">Am respectat ziua</button>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html><script type="module" src="budget.js"></script>
 <script type="module" src="notifications.js"></script>
 </html><!doctype html>
 <html lang="ro">
